@@ -1,0 +1,864 @@
+================================================================================
+                    READYSETHIRE - PROJECT DOCUMENTATION
+                    (Student-Friendly Viva Preparation Guide)
+================================================================================
+
+1. PROJECT OVERVIEW
+================================================================================
+
+What the Project Does:
+-----------------------
+ReadySetHire is a web application that helps students practice mock interviews 
+online. Think of it like Zoom, but specifically designed for interview practice. 
+Students can:
+- Practice interviews with their friends/peers through video calls
+- Take AI-powered interviews where a computer asks questions and gives feedback
+- Solve coding problems in a built-in code editor
+- Schedule interviews for later
+- Watch recordings of their past interviews
+
+Real-World Purpose:
+-------------------
+When students prepare for job interviews, they need practice. But finding someone 
+to practice with is hard. This platform solves that by:
+- Connecting students with peers for practice
+- Providing an AI interviewer that's available 24/7
+- Offering different types of interview questions (coding, web development, 
+  consulting)
+- Letting students practice coding problems during interviews
+
+What Problem It Solves:
+----------------------
+1. Students don't have people to practice interviews with
+2. Students are nervous about interviews and need more practice
+3. Students need feedback on their interview performance
+4. Students want to practice coding problems in a real interview setting
+5. Students need different types of interview questions (DSA, Web Dev, Consulting)
+
+
+2. SYSTEM ARCHITECTURE (Simple + Clear)
+================================================================================
+
+Frontend (What It Does):
+------------------------
+The frontend is what users see and interact with. It's built using:
+- Next.js 14 (a React framework) - makes the website fast and modern
+- React - creates interactive user interface
+- TypeScript - prevents coding errors
+- Tailwind CSS - makes the website look beautiful
+
+The frontend handles:
+- User login and authentication
+- Displaying video calls
+- Showing interview questions
+- Code editor for solving problems
+- Scheduling interviews
+- Viewing past interviews
+
+Backend (What It Does):
+-----------------------
+The backend is the "brain" that processes requests. In this project, Next.js 
+handles both frontend and backend using "Server Actions" (functions that run 
+on the server).
+
+The backend:
+- Creates video call rooms using Stream.io
+- Generates AI interview questions using Groq and Replicate APIs
+- Processes audio for AI interviews (converts speech to text)
+- Manages user authentication with Clerk
+- Stores interview data and recordings
+
+Database:
+---------
+This project doesn't use a traditional database like MySQL. Instead:
+- Stream.io stores video call data, recordings, and meeting information
+- Clerk stores user account information
+- Local storage (browser) stores code workspace data temporarily
+
+API Flow (How Data Travels Step-by-Step):
+------------------------------------------
+1. User opens website → Frontend loads
+2. User logs in → Clerk authenticates → User data sent to frontend
+3. User clicks "Start Interview" → Frontend calls Stream.io API → Video room 
+   created
+4. User joins video call → Stream.io connects users → Video/audio streams
+5. User takes AI interview → Audio recorded → Sent to Groq API → Text 
+   converted → AI generates response → Sent back to frontend
+6. User schedules interview → Data sent to Stream.io → Meeting saved → Link 
+   generated
+
+Simple Architecture Diagram (ASCII):
+------------------------------------
+                    ┌─────────────────┐
+                    │   User Browser  │
+                    │   (Frontend)    │
+                    └────────┬────────┘
+                             │
+                ┌────────────┼────────────┐
+                │                        │
+        ┌───────▼──────┐      ┌─────────▼────────┐
+        │   Next.js    │      │   Clerk Auth    │
+        │   Server     │      │   (Login)       │
+        └───────┬──────┘      └─────────────────┘
+                │
+    ┌───────────┼───────────┬──────────────┐
+    │           │           │              │
+┌───▼───┐  ┌───▼───┐  ┌────▼────┐  ┌──────▼──────┐
+│Stream │  │ Groq  │  │Replicate│  │  Browser   │
+│.io    │  │ API   │  │  API    │  │  Storage   │
+│(Video)│  │(AI)   │  │(AI Q's) │  │(Code Save)│
+└───────┘  └───────┘  └─────────┘  └────────────┘
+
+
+3. FRONTEND EXPLANATION
+================================================================================
+
+Technologies/Libraries Used:
+----------------------------
+1. Next.js 14 - Modern React framework that makes websites fast
+   - Why: It loads pages quickly, handles routing automatically
+   - Alternative: Could use plain React, but Next.js is better for production
+
+2. React - JavaScript library for building user interfaces
+   - Why: Makes it easy to create interactive components
+   - Alternative: Could use Vue.js or Angular, but React is most popular
+
+3. TypeScript - JavaScript with type checking
+   - Why: Catches errors before code runs, makes code more reliable
+   - Alternative: Plain JavaScript, but TypeScript prevents bugs
+
+4. Tailwind CSS - Utility-first CSS framework
+   - Why: Makes styling fast and consistent
+   - Alternative: Regular CSS or Bootstrap, but Tailwind is more flexible
+
+5. Stream.io Video SDK - For video calls
+   - Why: Handles all video/audio complexity automatically
+   - Alternative: WebRTC directly, but Stream.io is easier to use
+
+6. Clerk - Authentication service
+   - Why: Handles login, signup, user management automatically
+   - Alternative: Firebase Auth or custom auth, but Clerk is simpler
+
+7. CodeMirror - Code editor component
+   - Why: Provides syntax highlighting and code editing features
+   - Alternative: Monaco Editor, but CodeMirror is lighter
+
+8. Pyodide - Python runtime in browser
+   - Why: Lets users run Python code without a server
+   - Alternative: Send code to backend, but Pyodide is faster
+
+Main Components and Their Responsibilities:
+--------------------------------------------
+
+1. MeetingRoom.tsx
+   - Shows the video call interface
+   - Displays participants in grid or speaker view
+   - Shows interview questions sidebar
+   - Manages workspace panel (code editor)
+   - Controls: layout switching, participants list, call stats
+
+2. MeetingSetup.tsx
+   - Setup screen before joining a call
+   - Lets users test camera/microphone
+   - Option to join with mic/camera off
+   - Device settings (choose camera/mic)
+
+3. AiInterview.tsx
+   - AI-powered interview interface
+   - Records audio and converts to text
+   - Sends text to AI for questions/feedback
+   - Displays conversation history
+   - Text-to-speech for AI responses
+
+4. WorkspacePanel.tsx
+   - Code editor for Python and C++
+   - Syntax highlighting
+   - Runs Python code in browser (Pyodide)
+   - Test case validation
+   - Auto-saves code to browser storage
+
+5. CallList.tsx
+   - Shows list of upcoming interviews
+   - Shows list of past interviews
+   - Shows list of recordings
+   - Allows joining past meetings or watching recordings
+
+6. HomePage.tsx
+   - Landing page after login
+   - Shows upcoming interviews
+   - Shows recent interviews
+   - Shows recordings
+   - Join meeting by link feature
+
+7. ScheduleInterview.tsx
+   - Form to schedule future interviews
+   - Select interview type (DSA/WebDev/Consulting)
+   - Pick date and time
+   - Add description
+   - Creates meeting and generates link
+
+8. DSARecommendedQuestions.tsx / WebdevQuestions.tsx / ConsultingQuestions.tsx
+   - Shows recommended questions for each interview type
+   - Fetches questions from APIs (LeetCode, Groq, Replicate)
+   - Displays questions in sidebar during interview
+
+How Frontend Communicates with Backend:
+----------------------------------------
+1. Server Actions (Next.js feature):
+   - Functions in "actions" folder that run on server
+   - Called directly from frontend components
+   - Example: transcribeAudioAndGetFeedback() in groq.actions.ts
+
+2. Stream.io SDK:
+   - Direct API calls to Stream.io service
+   - Handles video/audio streaming
+   - Manages call state
+
+3. Clerk SDK:
+   - Direct API calls to Clerk for authentication
+   - Gets user information
+   - Manages sessions
+
+Why These Libraries Were Chosen:
+----------------------------------
+- Next.js: Industry standard, great performance, easy deployment
+- Stream.io: Handles complex video infrastructure, reliable
+- Clerk: Simplifies authentication, secure by default
+- Groq: Fast AI responses, affordable
+- Pyodide: No server needed for Python execution, instant feedback
+
+
+4. BACKEND EXPLANATION
+================================================================================
+
+Framework Used:
+---------------
+Next.js 14 with Server Actions (not a separate backend server)
+- Server Actions are functions that run on the server
+- They're in the "actions" folder
+- They can access environment variables and APIs securely
+
+Main Routes/Functions:
+----------------------
+
+1. groq.actions.ts
+   - transcribeAudioAndGetFeedback()
+     * Receives: Audio file (base64), domain (DSA/WebDev), conversation history
+     * Does: Converts audio to text using Groq Whisper, sends to AI for 
+       feedback/question
+     * Returns: Transcript text and AI response
+   
+   - getTextResponseAndFeedback()
+     * Receives: Text input, domain, conversation history
+     * Does: Sends text to Groq AI for interview question/feedback
+     * Returns: AI response
+   
+   - fetchWebdevQuestionGroq()
+     * Receives: Nothing
+     * Does: Asks Groq AI to generate a random web development question
+     * Returns: Question text
+   
+   - fetchConsultingQuestionGroq()
+     * Receives: Nothing
+     * Does: Asks Groq AI to generate a consulting case study question
+     * Returns: Case study question with solution framework
+
+2. stream.actions.ts
+   - tokenProvider()
+     * Receives: Nothing (uses current user from Clerk)
+     * Does: Creates authentication token for Stream.io video calls
+     * Returns: JWT token for Stream.io
+
+3. leetcode.actions.ts
+   - fetchLeetcodeQuestion()
+     * Receives: Nothing
+     * Does: Fetches random LeetCode problem from external API
+     * Returns: Question details (title, difficulty, problem statement, 
+       examples, tags)
+
+4. replicate.actions.ts
+   - fetchWebdevQuestionReplicate()
+     * Receives: Nothing
+     * Does: Uses Replicate AI to generate web development question
+     * Returns: Question text
+   
+   - fetchConsultingQuestionReplicate()
+     * Receives: Nothing
+     * Does: Uses Replicate AI to generate consulting case study
+     * Returns: Case study question
+
+API Endpoints List:
+-------------------
+This project doesn't use traditional REST API endpoints. Instead, it uses:
+- Next.js Server Actions (called directly from frontend)
+- Stream.io API (via SDK)
+- Clerk API (via SDK)
+- External APIs: Groq, Replicate, LeetCode API
+
+What Libraries Backend Uses and Why:
+------------------------------------
+1. @stream-io/node-sdk
+   - Creates Stream.io client on server
+   - Generates authentication tokens
+   - Why: Secure token generation must happen on server
+
+2. groq-sdk
+   - Connects to Groq AI service
+   - Handles audio transcription and chat
+   - Why: API keys must be secret (server-side only)
+
+3. replicate
+   - Connects to Replicate AI service
+   - Generates interview questions
+   - Why: Alternative AI service for question generation
+
+4. @clerk/nextjs/server
+   - Gets current user on server
+   - Validates authentication
+   - Why: Secure user verification
+
+How Backend Handles Requests:
+-----------------------------
+1. Request comes from frontend (Server Action call)
+2. Server Action function executes
+3. Function validates input (if needed)
+4. Function calls external API (Groq, Stream.io, etc.)
+5. Function processes response
+6. Function returns data to frontend
+7. Frontend receives and displays data
+
+How Backend Handles Responses:
+-------------------------------
+- Success: Returns data object (e.g., { transcript: "...", feedback: "..." })
+- Error: Throws error, caught by frontend, shows error message to user
+
+How Backend Handles Validation:
+-------------------------------
+- Checks if required data is present
+- Validates data format (e.g., audio is base64)
+- Checks user authentication (via Clerk)
+- Validates API responses before returning
+
+How Backend Handles Errors:
+----------------------------
+- Try-catch blocks around API calls
+- Error messages returned to frontend
+- Console logging for debugging
+- User-friendly error messages
+
+
+5. API CALLS
+================================================================================
+
+Every API Call Made in the Project:
+------------------------------------
+
+1. Groq API - Audio Transcription
+   - What is sent: Base64 encoded audio file, language (English)
+   - What is received: Transcribed text
+   - Why needed: Convert user's speech to text for AI processing
+   - Endpoint: groq.audio.transcriptions.create()
+
+2. Groq API - Chat Completion (AI Interview)
+   - What is sent: 
+     * System prompt (role: AI interviewer for DSA/WebDev)
+     * Conversation history (previous messages)
+     * Current user message (transcribed text or typed text)
+   - What is received: AI response (question or feedback)
+   - Why needed: Generate interview questions and provide feedback
+   - Endpoint: groq.chat.completions.create()
+   - Model: llama-3.1-8b-instant
+
+3. Groq API - Question Generation
+   - What is sent: Prompt asking for interview question on specific topic
+   - What is received: Interview question with answer
+   - Why needed: Provide practice questions during interviews
+   - Endpoint: groq.chat.completions.create()
+
+4. Replicate API - WebDev Question Generation
+   - What is sent: Prompt for web development question
+   - What is received: Streaming text response with question
+   - Why needed: Alternative source for web dev questions
+   - Endpoint: replicate.stream() with meta-llama-3-70b-instruct model
+
+5. Replicate API - Consulting Question Generation
+   - What is sent: Prompt for consulting case study
+   - What is received: Streaming text response with case study
+   - Why needed: Generate consulting interview questions
+   - Endpoint: replicate.stream() with meta-llama-3-70b-instruct model
+
+6. LeetCode API - DSA Question
+   - What is sent: Random question slug (problem identifier)
+   - What is received: Question details (title, difficulty, problem, examples, 
+     tags, similar questions)
+   - Why needed: Provide real LeetCode problems for DSA practice
+   - Endpoint: https://alfa-leetcode-api.onrender.com/select?titleSlug={slug}
+
+7. Stream.io API - Create Call
+   - What is sent: Call type, call ID, custom data (description, interview type, 
+     start time)
+   - What is received: Call object with meeting details
+   - Why needed: Create video meeting rooms
+   - Method: client.call().getOrCreate()
+
+8. Stream.io API - Query Calls
+   - What is sent: Filters (user ID, date range), sort options
+   - What is received: List of calls (upcoming, past, recordings)
+   - Why needed: Show user's interview history
+   - Method: client.queryCalls()
+
+9. Stream.io API - Get Call Recordings
+   - What is sent: Call ID
+   - What is received: Recording files and metadata
+   - Why needed: Allow users to watch past interviews
+   - Method: call.queryRecordings()
+
+10. Clerk API - Get Current User
+    - What is sent: Session token (automatic)
+    - What is received: User information (ID, name, email, image)
+    - Why needed: Identify logged-in user
+    - Method: currentUser() (automatic via Clerk SDK)
+
+11. Clerk API - Authentication
+    - What is sent: Email/password or OAuth credentials
+    - What is received: Session token and user data
+    - Why needed: User login and signup
+    - Method: Handled automatically by Clerk components
+
+Data Flow Example (AI Interview):
+----------------------------------
+1. User speaks → Audio recorded in browser
+2. Audio converted to base64 → Sent to Groq transcription API
+3. Groq returns text → Sent to Groq chat API with conversation history
+4. Groq returns AI response → Displayed to user
+5. AI response spoken aloud (text-to-speech in browser)
+
+
+6. WORKFLOW EXPLANATION (Easy to Speak in Viva)
+================================================================================
+
+User Opens the Website → What Happens:
+---------------------------------------
+1. Browser loads Next.js app
+2. Clerk checks if user is logged in
+3. If not logged in: Shows login/signup page
+4. If logged in: Shows home page with upcoming/past interviews
+5. Stream.io client initializes (for video calls)
+6. User can see navigation menu (Home, Upcoming, Previous, Recordings, etc.)
+
+User Clicks "Start Interview" → What Happens:
+----------------------------------------------
+1. User selects interview type (DSA/WebDev/Consulting)
+2. Frontend calls Stream.io SDK to create a call
+3. Stream.io generates unique meeting ID
+4. User redirected to meeting page (/meeting/{id})
+5. MeetingSetup component shows (camera/mic preview)
+6. User clicks "Join Meeting"
+7. Stream.io connects user to video room
+8. MeetingRoom component loads
+9. If interview type selected: Questions sidebar appears
+10. Workspace panel appears (code editor for DSA interviews)
+11. User can see other participants (if any)
+12. User can start solving problems or answering questions
+
+User Takes AI Interview → What Happens:
+-----------------------------------------
+1. User goes to /ai-interview page
+2. User selects domain (DSA/WebDev)
+3. User clicks "Start Interview"
+4. Camera/microphone access requested
+5. AI asks first question (text displayed)
+6. User can:
+   - Speak (click record button) → Audio recorded → Sent to Groq → Text 
+     converted → AI responds
+   - Type answer → Sent to Groq → AI responds
+7. Conversation history maintained
+8. AI provides feedback after each answer
+9. User can hear AI responses (text-to-speech)
+
+User Schedules Interview → What Happens:
+----------------------------------------
+1. User goes to /home/schedule-interview
+2. User fills form:
+   - Interview type
+   - Description
+   - Date and time
+3. User clicks "Schedule Interview"
+4. Frontend validates: date in future, description not empty
+5. Stream.io creates call with scheduled time
+6. Meeting link generated
+7. Link copied to clipboard
+8. User redirected to home page
+9. Interview appears in "Upcoming" list
+
+User Joins Scheduled Interview → What Happens:
+-----------------------------------------------
+1. User clicks on upcoming interview
+2. Checks if current time >= scheduled time
+3. If yes: Joins meeting immediately
+4. If no: Shows countdown or "Not yet started" message
+5. Meeting room loads with all features
+
+How Data Moves Through the System:
+-----------------------------------
+Example: AI Interview Audio Response
+
+1. User speaks → Browser records audio (MediaRecorder API)
+2. Audio stored as Blob → Converted to base64 string
+3. Base64 sent to Server Action (transcribeAudioAndGetFeedback)
+4. Server Action sends to Groq API (audio transcription)
+5. Groq returns text transcript
+6. Server Action sends transcript + history to Groq (chat completion)
+7. Groq returns AI response
+8. Server Action returns both transcript and AI response
+9. Frontend receives data
+10. Frontend updates conversation history
+11. Frontend displays new messages
+12. Frontend speaks AI response (text-to-speech)
+
+How the System Responds:
+-------------------------
+- Success: Data displayed, user sees result
+- Error: Error message shown, user can retry
+- Loading: Spinner/loader shown, user waits
+- Validation Error: Form highlights error, user fixes input
+
+
+7. LIBRARIES & TOOLS (Simple Explanation)
+================================================================================
+
+What Each Library Does (In Simple Words):
+------------------------------------------
+
+1. Next.js
+   - What it does: Makes React websites super fast and easy to build
+   - Why this project needs it: Handles routing, server-side code, 
+     optimization automatically
+   - Why not alternatives: Next.js is industry standard, great documentation
+
+2. React
+   - What it does: Makes websites interactive (buttons, forms, dynamic content)
+   - Why this project needs it: Creates reusable UI components
+   - Why not alternatives: Most popular, huge community, lots of resources
+
+3. TypeScript
+   - What it does: JavaScript but with type checking (catches errors early)
+   - Why this project needs it: Prevents bugs, makes code easier to understand
+   - Why not alternatives: Industry standard, better than plain JavaScript
+
+4. Tailwind CSS
+   - What it does: Pre-built CSS classes for styling (no writing custom CSS)
+   - Why this project needs it: Fast styling, consistent design
+   - Why not alternatives: More flexible than Bootstrap, faster than custom CSS
+
+5. Stream.io Video SDK
+   - What it does: Handles video calls (camera, microphone, screen sharing)
+   - Why this project needs it: Too complex to build video calling from scratch
+   - Why not alternatives: WebRTC directly is too complicated, Stream.io is 
+     reliable
+
+6. Clerk
+   - What it does: Handles user login, signup, password reset automatically
+   - Why this project needs it: Building authentication is complex and 
+     security-critical
+   - Why not alternatives: Firebase Auth is similar, but Clerk is simpler for 
+     Next.js
+
+7. Groq SDK
+   - What it does: Connects to Groq AI service (fast AI responses)
+   - Why this project needs it: Need AI for interviews, Groq is fast and 
+     affordable
+   - Why not alternatives: OpenAI is expensive, Groq is faster and cheaper
+
+8. Replicate
+   - What it does: Runs AI models in the cloud (alternative AI service)
+   - Why this project needs it: Backup source for generating questions
+   - Why not alternatives: Could use only Groq, but Replicate offers different 
+     models
+
+9. CodeMirror
+   - What it does: Code editor with syntax highlighting (like VS Code in browser)
+   - Why this project needs it: Users need to write code during interviews
+   - Why not alternatives: Monaco Editor is heavier, CodeMirror is perfect for 
+     this use case
+
+10. Pyodide
+    - What it does: Runs Python code in the browser (no server needed)
+    - Why this project needs it: Users can test code instantly without waiting 
+      for server
+    - Why not alternatives: Sending code to server is slower, Pyodide is instant
+
+11. Framer Motion
+    - What it does: Makes animations smooth and easy (fade in, slide, etc.)
+    - Why this project needs it: Makes UI feel polished and professional
+    - Why not alternatives: CSS animations are harder, Framer Motion is simpler
+
+12. React Hook Form
+    - What it does: Makes forms easier to handle (validation, submission)
+    - Why this project needs it: Simplifies form management
+    - Why not alternatives: Could use plain React state, but React Hook Form is 
+      better
+
+13. Zod
+    - What it does: Validates data (checks if input is correct format)
+    - Why this project needs it: Ensures data is valid before processing
+    - Why not alternatives: Could write custom validation, but Zod is easier
+
+14. date-fns
+    - What it does: Makes working with dates easier (formatting, comparing)
+    - Why this project needs it: Interview scheduling needs date handling
+    - Why not alternatives: Native JavaScript dates are confusing, date-fns is 
+      simpler
+
+
+8. PROBLEMS FACED DURING DEVELOPMENT
+================================================================================
+
+Realistic Challenges and Solutions:
+------------------------------------
+
+1. CORS (Cross-Origin Resource Sharing) Issues
+   - Problem: Browser blocked API calls to external services
+   - Solution: Used Server Actions (runs on server, no CORS issues)
+   - Lesson: Server-side API calls avoid browser CORS restrictions
+
+2. Video Call Connection Problems
+   - Problem: Users couldn't connect to video calls, audio/video not working
+   - Solution: Properly initialized Stream.io client, handled device 
+     permissions, added error handling
+   - Lesson: Video calling requires proper setup and error handling
+
+3. Audio Recording and Processing
+   - Problem: Audio format issues, base64 conversion errors, large file sizes
+   - Solution: Used MediaRecorder API correctly, converted to webm format, 
+     handled base64 encoding properly
+   - Lesson: Audio processing requires careful format handling
+
+4. AI Response Delays
+   - Problem: Users waiting too long for AI responses, poor user experience
+   - Solution: Used Groq (faster than OpenAI), added loading indicators, 
+     optimized prompts
+   - Lesson: User feedback (loading states) is crucial for async operations
+
+5. Code Editor Not Saving
+   - Problem: Users lost code when refreshing page
+   - Solution: Implemented localStorage to auto-save code
+   - Lesson: Always save user work automatically
+
+6. Python Execution Errors
+   - Problem: Pyodide not loading, code execution failing, error messages 
+     unclear
+   - Solution: Proper error handling, clear error messages, fallback messages
+   - Lesson: In-browser code execution needs robust error handling
+
+7. Authentication State Management
+   - Problem: User logged out unexpectedly, session issues
+   - Solution: Properly configured Clerk middleware, handled loading states
+   - Lesson: Authentication state needs careful management
+
+8. Interview Scheduling Validation
+   - Problem: Users could schedule interviews in the past
+   - Solution: Added date validation before creating meeting
+   - Lesson: Always validate user input on both frontend and backend
+
+9. Multiple Test Cases in Code Workspace
+   - Problem: Users wanted to test multiple cases, but only one worked
+   - Solution: Implemented semicolon-separated test case format
+   - Lesson: Listen to user needs and iterate on features
+
+10. Mobile Responsiveness
+    - Problem: Website didn't work well on phones
+    - Solution: Used Tailwind responsive classes, mobile-friendly components
+    - Lesson: Always test on multiple screen sizes
+
+11. API Rate Limiting
+    - Problem: Too many API calls, hitting rate limits
+    - Solution: Cached questions, optimized API calls, used efficient models
+    - Lesson: Be mindful of API costs and rate limits
+
+12. Real-time Updates
+    - Problem: Interview lists not updating when new interviews created
+    - Solution: Proper state management, refresh on navigation
+    - Lesson: Real-time features need careful state management
+
+
+9. HOW TO EXPLAIN THIS TO A TEACHER
+================================================================================
+
+1-Minute Explanation:
+--------------------
+"ReadySetHire is a mock interview practice platform. Students can practice 
+interviews with peers through video calls or take AI-powered interviews. The 
+platform supports three types: coding (DSA), web development, and consulting. 
+It includes a code editor where students can solve problems during interviews. 
+Built with Next.js, React, and uses Stream.io for video, Groq for AI, and 
+Clerk for authentication."
+
+3-Minute Explanation:
+--------------------
+"ReadySetHire solves the problem of interview practice. Many students struggle 
+to find people to practice with, so I built a platform that connects students 
+for peer-to-peer mock interviews via video calls.
+
+The platform has three main features:
+1. Video interviews with peers using Stream.io
+2. AI-powered interviews using Groq AI that asks questions and gives feedback
+3. A code workspace with Python/C++ editor and in-browser execution
+
+The tech stack:
+- Frontend: Next.js 14 with React and TypeScript
+- Video: Stream.io SDK
+- AI: Groq for interviews, Replicate for question generation
+- Auth: Clerk
+- Code execution: Pyodide for Python in browser
+
+Users can schedule interviews, view past interviews, and watch recordings. 
+The AI interview feature records audio, converts to text, and generates 
+personalized questions based on the conversation history."
+
+5-Minute Explanation:
+---------------------
+"ReadySetHire is a comprehensive mock interview practice platform I developed 
+to help students prepare for job interviews.
+
+PROBLEM: Students need interview practice but lack partners and feedback.
+
+SOLUTION: A web platform with three interview modes:
+1. Peer-to-peer video interviews (like Zoom but for practice)
+2. AI-powered interviews with real-time feedback
+3. Code practice workspace for technical interviews
+
+TECHNICAL ARCHITECTURE:
+- Built with Next.js 14 (React framework) for fast performance
+- Stream.io handles video infrastructure (too complex to build from scratch)
+- Groq AI provides fast, affordable AI responses for interviews
+- Clerk manages authentication securely
+- CodeMirror + Pyodide enables in-browser code editing and execution
+
+KEY FEATURES:
+- Schedule interviews with specific types (DSA/WebDev/Consulting)
+- Real-time video calls with screen sharing
+- AI interviewer that adapts questions based on responses
+- Code editor with syntax highlighting and test case validation
+- Interview history and recordings
+- Question recommendations for each interview type
+
+HOW IT WORKS:
+1. User logs in via Clerk
+2. Creates or joins interview via Stream.io
+3. During interview: sees questions, writes code, gets feedback
+4. AI interview: speaks or types, AI responds with questions/feedback
+5. All interviews saved, can be rewatched
+
+CHALLENGES SOLVED:
+- Video calling complexity → Used Stream.io
+- AI response speed → Used Groq (faster than OpenAI)
+- Code execution → Pyodide runs Python in browser
+- Authentication → Clerk handles security
+- Real-time updates → Proper state management
+
+This project demonstrates full-stack development, API integration, real-time 
+communication, and AI integration."
+
+
+10. KEY LEARNING & FUTURE IMPROVEMENTS
+================================================================================
+
+Things Learned:
+---------------
+1. Full-stack development with Next.js
+2. Real-time video communication (Stream.io)
+3. AI integration (Groq, Replicate)
+4. In-browser code execution (Pyodide)
+5. Authentication and authorization (Clerk)
+6. State management in React
+7. API integration and error handling
+8. Responsive design
+9. User experience optimization
+10. Server Actions in Next.js
+
+Future Improvements:
+--------------------
+
+1. Database Integration
+   - Add PostgreSQL or MongoDB
+   - Store interview history, user profiles, analytics
+   - Track performance over time
+
+2. Advanced AI Features
+   - Sentiment analysis of interview responses
+   - Performance scoring and detailed feedback
+   - Personalized learning paths
+   - Interview difficulty adaptation
+
+3. Collaboration Features
+   - Screen sharing during interviews
+   - Collaborative code editing
+   - Whiteboard for system design
+   - Real-time feedback from peers
+
+4. Analytics Dashboard
+   - Track improvement over time
+   - Weak areas identification
+   - Interview statistics
+   - Progress reports
+
+5. More Interview Types
+   - System design interviews
+   - Behavioral interviews
+   - Machine learning interviews
+   - DevOps interviews
+
+6. Mobile App
+   - Native iOS/Android apps
+   - Push notifications for scheduled interviews
+   - Offline mode for practice
+
+7. Social Features
+   - Find interview partners
+   - Study groups
+   - Leaderboards
+   - Community forums
+
+8. Enhanced Code Workspace
+   - More languages (Java, JavaScript, Go)
+   - Code execution for all languages
+   - Integration with LeetCode/HackerRank
+   - Auto-completion and hints
+
+9. Recording Features
+   - Video recording of interviews
+   - Playback with annotations
+   - Share recordings with mentors
+   - Download recordings
+
+10. Payment Integration
+    - Premium features
+    - Subscription plans
+    - Pay-per-interview option
+
+11. Gamification
+    - Points and badges
+    - Streaks for daily practice
+    - Achievements
+    - Challenges
+
+12. Mentorship Program
+    - Connect with industry professionals
+    - Scheduled mentor sessions
+    - Career guidance
+    - Resume review
+
+What the Project Can Become:
+----------------------------
+- A complete interview preparation platform
+- A learning management system for interview skills
+- A marketplace connecting students with interview coaches
+- A certification platform for interview readiness
+- An AI-powered career coach
+- A community platform for job seekers
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================
+
